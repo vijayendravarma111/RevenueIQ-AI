@@ -1,5 +1,14 @@
 # RevenueIQ AI – AI-Powered Business Growth Platform
 
+## 🌐 Live Demo
+
+Experience the deployed application here:
+
+🔗 **RevenueIQ AI – AI-Powered Business Growth Platform**
+
+https://revenueiq-ai-intel.streamlit.app/
+
+---
 ## Overview
 
 RevenueIQ AI is an end-to-end business analytics platform designed to help organizations make smarter revenue, customer, demand, and inventory decisions.
