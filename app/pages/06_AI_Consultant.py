@@ -64,12 +64,7 @@ unsafe_allow_html=True)
 # ENV
 # =====================================================
 
-load_dotenv()
-
-API_KEY = os.getenv(
-    "GEMINI_API_KEY"
-)
-
+API_KEY = st.secrets["GEMINI_API_KEY"]
 # =====================================================
 # LOAD DATA
 # =====================================================
