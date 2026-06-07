@@ -1,0 +1,10 @@
+.venv/
+.env
+__pycache__/
+
+data/raw/
+
+data/processed/rossmann_clean.csv
+data/processed/superstore_clean.csv
+
+.vscode/

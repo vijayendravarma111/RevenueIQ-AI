@@ -1,0 +1,10 @@
+,dtype,missing,missing_%,unique
+Store,int64,0,0.0,1115
+DayOfWeek,int64,0,0.0,7
+Date,datetime64[us],0,0.0,942
+Sales,int64,0,0.0,21734
+Customers,int64,0,0.0,4086
+Open,int64,0,0.0,2
+Promo,int64,0,0.0,2
+StateHoliday,str,0,0.0,4
+SchoolHoliday,int64,0,0.0,2
