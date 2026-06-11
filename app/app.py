@@ -8,7 +8,7 @@ from pathlib import Path
 # =====================================================
 
 st.set_page_config(
-    page_title="AI Revenue Intelligence Platform",
+    page_title="RevenueIQ AI Platform",
     layout="wide"
 )
 
@@ -112,6 +112,16 @@ KPI_DIR = (
     "dashboard"
 )
 
+def format_currency(value):
+    if value >= 1e9:
+        return f"${value/1e9:.1f}B"
+    elif value >= 1e6:
+        return f"${value/1e6:.1f}M"
+    elif value >= 1e3:
+        return f"${value/1e3:.1f}K"
+    else:
+        return f"${value:,.2f}"
+
 # =====================================================
 # LOAD DATA
 # =====================================================
@@ -135,6 +145,13 @@ top_customers = pd.read_csv(
 inventory_kpis = pd.read_csv(
     KPI_DIR / "inventory_kpis.csv"
 )
+
+# Load 90-day forecast to calculate demand velocity
+try:
+    forecast_90 = pd.read_csv(KPI_DIR / "forecast_90_days.csv")
+    daily_forecast_velocity = forecast_90["predicted_sales"].mean()
+except Exception:
+    daily_forecast_velocity = 0.0
 
 # =====================================================
 # KPI VALUES
@@ -169,7 +186,7 @@ st.markdown(f"""
 
 <h1>RevenueIQ AI</h1>
 
-<p>AI-Powered Business Growth Platform</p>
+<p>Data Science & Decision Intelligence Platform</p>
 
 <div class="hero-features">
     <span>Revenue Analytics</span>
@@ -431,11 +448,11 @@ with right:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # =====================================================
-# AI EXECUTIVE SUMMARY
+# EXECUTIVE SUMMARY
 # =====================================================
 
 st.subheader(
-    " AI Executive Summary"
+    " Executive Summary"
 )
 
 margin = (
@@ -468,8 +485,8 @@ st.markdown(f"""
 <b>{margin:.1f}%</b> margin.
 
 
- Customer base continues to show
-stable engagement and purchasing activity.
+ Customer base consists of
+<b>{int(total_customers):,}</b> active customer profiles.
 
 
  Inventory operations support
@@ -477,10 +494,8 @@ stable engagement and purchasing activity.
 <b>{inventory_stock:,}</b> stock units.
 
 
- The business is positioned for
-continued growth through AI-driven
-revenue optimization, customer intelligence,
-demand forecasting and inventory planning.
+ Forecast-driven daily sales velocity is estimated at
+<b>{format_currency(daily_forecast_velocity)}/day</b> over the next 90 days.
 
 </div>
 """,

@@ -231,35 +231,34 @@ left,right = st.columns([1,1])
 with left:
 
     st.subheader(
-        " Customer Health"
+        " Customer Segment Distribution"
     )
 
-    st.markdown("""
-    <div class="main-card">
+    # Calculate dynamic customer segment distribution
+    segment_distribution = segments["segment_name"].value_counts().reset_index()
+    segment_distribution.columns = ["Segment", "Count"]
 
-    <h2 style="margin:0;">
-    88 / 100
-    </h2>
+    fig_dist = px.pie(
+        segment_distribution,
+        names="Segment",
+        values="Count",
+        hole=0.4,
+        color="Segment",
+        color_discrete_map={
+            "VIP": "#10b981",       # Green
+            "Frequent": "#3b82f6",   # Blue
+            "Regular": "#f59e0b",    # Amber
+            "Low Value": "#ef4444"   # Red
+        }
+    )
+    fig_dist.update_layout(
+        height=280,
+        margin=dict(l=10, r=10, t=10, b=10),
+        showlegend=True
+    )
+    st.plotly_chart(fig_dist, use_container_width=True)
 
-    <br>
 
-    Loyalty ............. Strong ✅
-
-    <br>
-
-    Frequency ........ Healthy 📈
-
-    <br>
-
-    Revenue ............ High 💰
-
-    <br>
-
-    Risk .................... Low 🟢
-
-    </div>
-    """,
-    unsafe_allow_html=True)
 
 with right:
 
@@ -305,11 +304,47 @@ with right:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # =====================================================
-# SEGMENT PERFORMANCE
+# SEGMENT COMPOSITION
+# =====================================================
+st.subheader(" Segment Composition & RFM Metrics")
+
+try:
+    segment_stats = segments.groupby("segment_name").agg(
+        customer_count=("customer_id", "count"),
+        avg_sales=("total_sales", "mean"),
+        avg_orders=("total_orders", "mean"),
+        avg_profit=("total_profit", "mean")
+    ).reset_index()
+
+    segment_stats.columns = [
+        "Segment",
+        "Customer Count",
+        "Average Spend ($)",
+        "Average Orders",
+        "Average Profit ($)"
+    ]
+
+    st.dataframe(
+        segment_stats.style.format({
+            "Customer Count": "{:,}",
+            "Average Spend ($)": "${:,.2f}",
+            "Average Orders": "{:.1f}",
+            "Average Profit ($)": "${:,.2f}"
+        }),
+        use_container_width=True,
+        hide_index=True
+    )
+except Exception as e:
+    st.error(f"Error loading segment composition: {str(e)}")
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# =====================================================
+# SEGMENT REVENUE CONTRIBUTION
 # =====================================================
 
 st.subheader(
-    " Segment Performance"
+    " Segment Revenue Contribution"
 )
 
 segment_sales = (
@@ -522,49 +557,109 @@ with c3:
     unsafe_allow_html=True)
     
 # =====================================================
-# AI CUSTOMER STRATEGY
+# CUSTOMER STRATEGY RECOMMENDATIONS
 # =====================================================
 
 st.subheader(
-    " AI Customer Strategy"
+    " Customer Segment Contributions"
 )
+
+# Calculate dynamic stats
+try:
+    total_sales_sum = segments["total_sales"].sum()
+    
+    vip_c = (segments["segment"] == 1).sum()
+    vip_c_pct = (vip_c / len(segments)) * 100
+    vip_sales = segments[segments["segment"] == 1]["total_sales"].sum()
+    vip_sales_pct = (vip_sales / total_sales_sum) * 100
+    
+    freq_c = (segments["segment"] == 2).sum()
+    freq_c_pct = (freq_c / len(segments)) * 100
+    freq_sales = segments[segments["segment"] == 2]["total_sales"].sum()
+    freq_sales_pct = (freq_sales / total_sales_sum) * 100
+    
+    low_c = (segments["segment"] == 3).sum()
+    low_c_pct = (low_c / len(segments)) * 100
+    low_sales = segments[segments["segment"] == 3]["total_sales"].sum()
+    low_sales_pct = (low_sales / total_sales_sum) * 100
+    
+    reg_c = (segments["segment"] == 0).sum()
+    reg_c_pct = (reg_c / len(segments)) * 100
+    reg_sales = segments[segments["segment"] == 0]["total_sales"].sum()
+    reg_sales_pct = (reg_sales / total_sales_sum) * 100
+except Exception:
+    vip_c, vip_c_pct, vip_sales, vip_sales_pct = 0, 0.0, 0.0, 0.0
+    freq_c, freq_c_pct, freq_sales, freq_sales_pct = 0, 0.0, 0.0, 0.0
+    low_c, low_c_pct, low_sales, low_sales_pct = 0, 0.0, 0.0, 0.0
+    reg_c, reg_c_pct, reg_sales, reg_sales_pct = 0, 0.0, 0.0, 0.0
 
 left,right = st.columns(2)
 
 with left:
 
-    st.markdown("""
+    st.markdown(f"""
     <div class="summary-card">
-
-     VIP customers remain the
-    primary revenue contributors.
-
+    💎 <b>VIP Champions</b>: {vip_c} customers ({vip_c_pct:.1f}%) generate <b>${vip_sales:,.2f}</b> ({vip_sales_pct:.1f}% of total sales).
     </div>
 
     <div class="summary-card">
-
-     Frequent buyers offer the
-    strongest upsell opportunity.
-
+    ⚡ <b>Frequent Buyers</b>: {freq_c} customers ({freq_c_pct:.1f}%) generate <b>${freq_sales:,.2f}</b> ({freq_sales_pct:.1f}% of total sales).
     </div>
     """,
     unsafe_allow_html=True)
 
 with right:
 
-    st.markdown("""
+    st.markdown(f"""
     <div class="summary-card">
-
-     Low-value customers should
-    receive targeted promotions.
-
+    📊 <b>Regular Cohort</b>: {reg_c} customers ({reg_c_pct:.1f}%) generate <b>${reg_sales:,.2f}</b> ({reg_sales_pct:.1f}% of total sales).
     </div>
 
     <div class="summary-card">
-
-     Customer portfolio remains
-    healthy with positive growth outlook.
-
+    🎯 <b>Low-Value Cohort</b>: {low_c} customers ({low_c_pct:.1f}%) generate <b>${low_sales:,.2f}</b> ({low_sales_pct:.1f}% of total sales).
     </div>
     """,
     unsafe_allow_html=True)
+
+# =====================================================
+# ML DIAGNOSTICS & MODEL CARD
+# =====================================================
+st.markdown("<br>", unsafe_allow_html=True)
+
+with st.expander("📊 Machine Learning Diagnostics & Model Card", expanded=False):
+    st.markdown("### K-Means Customer Segmentation Model")
+    st.markdown("""
+    This segmentation module groups the customer base into distinct, actionable cohorts using unsupervised K-Means clustering.
+    
+    #### Model Configurations
+    * **Features Used (RFM Model)**: `total_sales` (Monetary), `total_profit` (Monetary), `total_quantity` (Volume), `total_orders` (Frequency).
+    * **Data Scaling**: `StandardScaler` applied to prevent larger magnitude features (e.g., total sales) from dominating the distance calculations.
+    * **Optimal Clusters ($K$)**: 4 clusters.
+    """)
+    
+    # Load KMeans metrics from JSON
+    kmeans_metrics_path = ROOT_DIR / "models" / "kmeans" / "kmeans_metrics.json"
+    k_metrics = {}
+    if kmeans_metrics_path.exists():
+        try:
+            import json
+            with open(kmeans_metrics_path, "r") as f:
+                k_metrics = json.load(f)
+        except Exception:
+            pass
+            
+    c1, c2 = st.columns(2)
+    if k_metrics:
+        c1.metric("Silhouette Score (Cohesion & Separation)", f"{k_metrics.get('SilhouetteScore', 0.0):.4f}")
+        c2.metric("Inertia (Within-Cluster Sum of Squares)", f"{k_metrics.get('Inertia', 0.0):,.2f}")
+    else:
+        c1.metric("Silhouette Score", "N/A")
+        c2.metric("Inertia (WCSS)", "N/A")
+        
+    st.markdown("""
+    #### Business Strategy Matrix & Interpretation
+    * **VIP Customers (Cluster 1 / Segment 1)**: High purchase frequency, highest revenue contribution, and high profitability. Strategy: **Retain & Protect** (loyalty program access, dedicated support).
+    * **Frequent Buyers (Cluster 2 / Segment 2)**: Very high order count and volume, but moderate profitability. Strategy: **Upsell Target** (bundle offers, cross-sell high-margin products).
+    * **Regular Customers (Cluster 0 / Segment 0)**: Moderate spend and frequency. Strategy: **Nurture** (targeted emails, re-engagement offers).
+    * **Low-Value Customers (Cluster 3 / Segment 3)**: Lowest purchase frequency, sales, and profit. Strategy: **Promotion Target** (low-cost reactive couponing, minimal customer acquisition spend).
+    """)

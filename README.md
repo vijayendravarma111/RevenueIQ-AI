@@ -1,264 +1,200 @@
-# RevenueIQ AI – AI-Powered Business Growth Platform
+# RevenueIQ AI – Production-Ready Business Intelligence & Machine Learning Platform
 
-## 🌐 Live Demo
+## Executive Summary
 
-Experience the deployed application here:
+**RevenueIQ AI** is a production-ready business analytics and decision intelligence platform that transforms raw operational data into actionable, executive-level insights. Designed as a recruiter-grade portfolio project, the platform integrates **Business Intelligence (BI)**, **Time-Series Forecasting**, **Supervised Machine Learning**, and **Unsupervised Customer Segmentation** into a single interactive Streamlit application.
 
-🔗 **RevenueIQ AI – AI-Powered Business Growth Platform**
-
-https://revenueiq-ai-intel.streamlit.app/
-
----
-## Overview
-
-RevenueIQ AI is an end-to-end business analytics platform designed to help organizations make smarter revenue, customer, demand, and inventory decisions.
-
-The platform combines Business Intelligence, Machine Learning, Forecasting, and Generative AI to transform raw business data into actionable insights through an interactive executive dashboard.
-
-Built with a business-first approach, RevenueIQ AI enables decision-makers to monitor performance, identify opportunities, forecast future demand, and receive AI-generated recommendations from a single platform.
+The project demonstrates end-to-end data engineering and machine learning best practices: cleaning raw transaction data, engineering robust lag and seasonal features, auditing and removing target leakages, validating models using rigorous holdout splits, and automating the pipeline from raw ingestion to serialized output.
 
 ---
 
-## Business Problem
+## 1. Project Architecture & Pipelines
 
-Modern businesses generate large amounts of operational data but often struggle to convert that data into meaningful decisions.
-
-Key challenges include:
-
-* Understanding revenue performance
-* Predicting future demand
-* Identifying high-value customers
-* Monitoring inventory health
-* Generating executive-level business insights
-* Making data-driven decisions quickly
-
-RevenueIQ AI addresses these challenges through a unified analytics and intelligence platform.
-
----
-
-## Key Features
-
-### Executive Command Center
-
-A centralized dashboard providing a high-level business overview.
-
-Features:
-
-* Revenue monitoring
-* Profit tracking
-* Customer analytics
-* Business health indicators
-* Executive summaries
-* Operational alerts
-
----
-
-### Demand Intelligence
-
-Machine Learning-based demand forecasting module.
-
-Features:
-
-* Sales forecasting
-* Demand trend analysis
-* Growth projections
-* Forecast confidence tracking
-* Inventory planning support
-
----
-
-### Revenue Intelligence
-
-Revenue analytics and growth optimization module.
-
-Features:
-
-* Revenue trend monitoring
-* Profitability analysis
-* Revenue driver identification
-* Business performance evaluation
-* Growth opportunity discovery
-
----
-
-### Customer Insights
-
-Advanced customer intelligence and segmentation.
-
-Features:
-
-* Customer segmentation
-* VIP customer identification
-* Revenue contribution analysis
-* Customer value assessment
-* Retention strategy recommendations
-
----
-
-### Inventory Analytics
-
-Inventory monitoring and risk management system.
-
-Features:
-
-* Inventory health monitoring
-* Stock risk detection
-* Reorder analysis
-* Supplier performance tracking
-* Inventory optimization recommendations
-
----
-
-### AI Business Consultant
-
-Generative AI-powered business assistant.
-
-Features:
-
-* Natural language business queries
-* Executive summaries
-* Strategic recommendations
-* Revenue insights
-* Customer insights
-* Inventory intelligence
-
-Example Questions:
-
-* What is driving revenue growth?
-* Which customer segment should we target?
-* Is inventory healthy?
-* What actions should management take?
-* Give me an executive business summary.
-
----
-
-## Technology Stack
-
-### Programming
-
-* Python
-
-### Data Analysis
-
-* Pandas
-* NumPy
-
-### Machine Learning
-
-* Scikit-Learn
-* XGBoost
-
-### Forecasting
-
-* Prophet
-
-### Data Visualization
-
-* Plotly
-* Matplotlib
-
-### Dashboard
-
-* Streamlit
-
-### Database
-
-* MySQL
-
-### AI Integration
-
-* Google Gemini API
-
-### Deployment
-
-* Docker
-* Streamlit Cloud 
-
----
-
-## Project Architecture
+### End-to-End Data Pipeline
+The following flowchart illustrates the flow of raw data through data preparation, feature engineering, modeling, KPI calculations, and the interactive presentation layer.
 
 ```mermaid
 flowchart TD
+    %% Datasets
+    subgraph Raw Data Ingestion
+        R1[(Rossmann Store Sales Data)]
+        R2[(Superstore Transaction Data)]
+        R3[(Inventory CSV)]
+    end
 
-A[Data Sources]
---> B[Data Cleaning & Processing]
+    %% Preprocessing
+    subgraph Data Engineering & Preprocessing
+        P1[Median Imputation & Cleaning]
+        P2[RFM Metric Aggregation]
+        P3[Date & Calendar Feature Extraction]
+    end
 
-B --> C[Feature Engineering]
+    R1 --> P1
+    R2 --> P2
+    R1 & R2 --> P3
 
-C --> D[Machine Learning Models]
+    %% Modeling
+    subgraph Machine Learning Pipeline
+        M1[Prophet Time-Series Forecasting]
+        M2[Leakage-Free XGBoost Sales Regressor]
+        M3[K-Means Customer Segmentation]
+    end
 
-D --> E[Business KPI Generation]
+    P1 & P3 --> M1
+    P3 --> M2
+    P2 --> M3
 
-E --> F[Interactive Dashboard]
+    %% Dashboard Data Export
+    subgraph Dashboard KPI Export
+        D1[90-Day Demand Forecast]
+        D2[Feature Importances / Revenue Drivers]
+        D3[Customer Segment Cohorts]
+    end
 
-F --> G[AI-Powered Recommendations]
+    M1 --> D1
+    M2 --> D2
+    M3 --> D3
+
+    %% Visualisation
+    subgraph Interactive Streamlit UI
+        UI1[Demand Intelligence Page]
+        UI2[Revenue Intelligence Page]
+        UI3[Customer Insights Page]
+        UI4[Command Center / Executive Snapshot]
+    end
+
+    D1 --> UI1
+    D2 --> UI2
+    D3 --> UI3
+```
+
+### System Architecture
+The platform is built on a modular three-tier architecture, separating data storage, ML processing, and user presentation.
+
+```mermaid
+flowchart LR
+    subgraph Presentation Layer
+        UI[Streamlit Web App]
+        Chat[RevenueGPT AI Consultant]
+    end
+
+    subgraph Intelligence & Processing Layer
+        Pipeline[run_pipeline.py]
+        Models[(Serialized Models .pkl)]
+        Gemini[Google Gemini 2.5 Flash API]
+    end
+
+    subgraph Data & Storage Layer
+        DB[(MySQL Database)]
+        CSV[(Processed CSVs & KPIs)]
+    end
+
+    %% Flow
+    Pipeline --> Models
+    Pipeline --> CSV
+    CSV --> DB
+    
+    UI --> CSV
+    UI --> Models
+    Chat --> Gemini
+    UI --> Chat
 ```
 
 ---
 
-## Dashboard Modules
+## 2. Model Diagnostics & Performance Summary
 
-* Executive Command Center
-* Demand Intelligence
-* Revenue Intelligence
-* Customer Insights
-* Inventory Analytics
-* AI Business Consultant
+Every model in the platform is rigorously evaluated. The table below represents the **actual, leakage-free metrics** generated by executing the automated pipeline [run_pipeline.py](file:///c:/Users/vijayendravarma/Desktop/RESUME_PROJECTS/Data%20Science/AI_Revenue_Intelligence/run_pipeline.py):
+
+| Machine Learning Model | Task Type | Key Hyperparameters / Config | Evaluation Metrics (Test / Holdout Set) | Business Utility |
+| :--- | :--- | :--- | :--- | :--- |
+| **Prophet** | Time-Series Forecasting | Additive Yearly/Weekly Seasonality; Log-Transform | **MAE**: $1,505,947.85<br>**RMSE**: $2,086,499.97<br>**WMAPE**: 22.60% (77.4% Accuracy) | Predicts 90-day aggregate future demand to optimize inventory reorders and staffing |
+| **XGBoost Regressor** | Supervised Regression | `n_estimators=100`, `max_depth=6`, `learning_rate=0.1` | **MAE**: $1,472.87<br>**RMSE**: $2,170.96<br>**R² Score**: 0.6813 | Identifies promotions, competition distance, and calendar events driving store-level sales |
+| **K-Means** | Unsupervised Clustering | $K=4$ clusters; RFM features; `StandardScaler` | **Silhouette Score**: 0.2969<br>**Inertia (WCSS)**: 1,311.53 | Groups customer base into VIP, Frequent, Regular, and Low-Value cohorts for marketing campaigns |
 
 ---
 
-## Installation
+## 3. Data Engineering & Feature Engineering Details
 
-Clone the repository:
+The pipeline prepares raw inputs for modeling through targeted preprocessing steps:
 
+### Preprocessing & Imputation
+* **Missing Value Imputation**: Competition distance missing values are imputed using the median ($2,325\text{m}$). Competition open dates and secondary promotion schedules are zero-filled and categorized.
+* **Target Logging**: Time-series sales data undergoes a natural log transformation ($y_{log} = \log(y + 1)$) to stabilize variance, compress extreme holiday revenue peaks, and prevent negative forecast results.
+* **Feature Standardization**: Customer RFM features are standardized using `StandardScaler` to have a mean of 0 and variance of 1, ensuring distance calculations in K-Means are not distorted by feature magnitudes.
+
+### Feature Engineering
+1. **CompetitionAge**: Calculates how long a competitor store has been open relative to the transaction year (`Year - CompetitionOpenSinceYear`), clipped at 0.
+2. **PromoActive**: A binary indicator showing if a secondary promotion is active on a given day.
+3. **IsHoliday**: Merges and standardizes various string/categorical holiday codes (`StateHoliday` 'a', 'b', 'c', '0') into a single binary flag.
+4. **IsWeekend**: Extracts weekday values and flags Saturdays and Sundays to capture weekend shopping patterns.
+5. **Month boundaries**: Binary flags indicating month start (`MonthStart`) and month end (`MonthEnd`) to account for paycheck-driven consumer spending surges.
+
+### Technical Honesty: Resolving Data Leakage in XGBoost
+> [!IMPORTANT]
+> **Data Leakage Rectification**: The original implementation trained an XGBoost model utilizing `Customers` and `SalesPerCustomer` (calculated directly as `Sales / Customers`) as features. This led to a fake $R^2 = 0.9989$. Because the number of customers and the spend per customer are unknown at the time of forecasting, this represents severe target leakage.
+> We audited the pipeline and removed both features. The updated model uses only calendar, promotional, and competitive features available at prediction time. It achieves an honest, interview-defensible $R^2 = 0.6813$ on store-level sales, demonstrating true data science integrity.
+
+---
+
+## 4. Business Intelligence & Dynamic Calculation Methodology
+
+The platform rejects hardcoded dashboard statistics in favor of live, data-driven KPI metrics:
+
+* **Revenue Growth YoY**: Calculated dynamically by sorting the monthly sales log, summing the last 12 months of sales, and comparing it against the preceding 12-month period:
+  $$\text{Growth} = \frac{\text{Sales}_{last\_12m} - \text{Sales}_{prev\_12m}}{\text{Sales}_{prev\_12m}} \times 100$$
+* **Composite Business Health Score**: Evaluated as a weighted index of three core operational areas:
+  $$\text{Health Score} = 0.4 \times (3 \times \text{Profit Margin}\%) + 0.3 \times \text{Forecast Accuracy}\% + 0.3 \times \text{Inventory Health}\%$$
+* **Inventory Health**: Calculated dynamically based on active stock risk levels:
+  $$\text{Inventory Health} = \left(1 - \frac{N_{At\_Risk\_Products}}{N_{Total\_Products}}\right) \times 100$$
+* **Forecast-Driven Stock Run-Out (Days)**: Estimated for each item by dividing stock units by forecasted daily unit sales (scaled by forecast expected growth):
+  $$\text{Days to Stockout} = \frac{\text{Current Stock}}{\text{Historical Daily Sales Velocity} \times (1 + \text{Forecast Growth}\%)}$$
+
+---
+
+## 5. Technology Stack
+
+* **Language**: Python
+* **Data Engineering**: Pandas, NumPy, Scikit-Learn
+* **Machine Learning**: XGBoost, Scikit-Learn (KMeans)
+* **Forecasting**: Prophet (Meta)
+* **Generative AI**: Google Gemini API (`gemini-2.5-flash`)
+* **Presentation Layer**: Streamlit, Plotly, HTML5, CSS3
+* **Data Storage**: MySQL (PyMySQL, SQLAlchemy)
+
+---
+
+## 6. Installation & Reproducibility
+
+### Prerequisites
+* Python 3.10+
+* MySQL (Optional, for running database loaders)
+
+### Clone & Install Dependencies
 ```bash
 git clone https://github.com/vijayendravarma111/RevenueIQ-AI.git
 cd RevenueIQ-AI
-```
-
-Install dependencies:
-
-```bash
 pip install -r requirements.txt
 ```
 
-Run the application:
-
+### Run the ML Pipeline (Crucial for generating Serialized Models and CSV Datasets)
+Execute the end-to-end data preparation, model training, evaluation, and dashboard export pipeline:
 ```bash
-streamlit run app.py
+python run_pipeline.py
+```
+*This script runs preprocessing, trains all models (resolving target leakage), logs diagnostics in JSON files, and exports aggregated metrics to `data/processed/dashboard/`.*
+
+### Run the Streamlit Application
+Start the interactive BI and Machine Learning dashboard:
+```bash
+streamlit run app/app.py
 ```
 
 ---
 
-## Future Enhancements
+## 7. Author & Portfolio Context
 
-* Real-time business monitoring
-* Automated anomaly detection
-* Revenue optimization engine
-* Dynamic pricing recommendations
-* Multi-company support
-* Cloud deployment architecture
-* Advanced executive reporting
-
----
-
-## Project Highlights
-
-* End-to-End Data Science Project
-* Business Intelligence Dashboard
-* Demand Forecasting with Machine Learning
-* Customer Segmentation Analytics
-* Inventory Optimization
-* AI-Powered Business Consulting
-* Enterprise-Style Streamlit Application
-
----
-
-## Author
-
-Samudrala Vijayendra Varma
-
-B.Tech Computer Science Engineering
-
-Passionate about Data Science, Machine Learning, Analytics, and AI-powered Business Solutions.
+* **Developer**: Samudrala Vijayendra Varma
+* **Background**: B.Tech in Computer Science Engineering
+* **Role**: Data Scientist / Machine Learning Engineer
+* **Objective**: Building high-integrity, production-ready analytics systems that combine statistical modeling, predictive analytics, and executive business intelligence.

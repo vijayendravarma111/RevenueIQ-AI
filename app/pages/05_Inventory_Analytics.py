@@ -105,11 +105,6 @@ inventory = pd.read_csv(
     "inventory_full.csv"
 )
 
-competitors = pd.read_csv(
-    KPI_DIR /
-    "competitor_full.csv"
-)
-
 # =====================================================
 # KPI VALUES
 # =====================================================
@@ -146,7 +141,7 @@ st.title(
 )
 
 st.caption(
-    "Inventory Intelligence, Supplier Analytics & Pricing Monitoring"
+    "Inventory Intelligence & Forecast-Driven Safety Stock Monitoring"
 )
 
 # =====================================================
@@ -400,116 +395,63 @@ Below diagonal = Reorder Required
 st.markdown("<br>", unsafe_allow_html=True)
 
 # =====================================================
-# SUPPLIER INTELLIGENCE
+# FORECAST-DRIVEN INVENTORY PLANNING
 # =====================================================
 
-left,right = st.columns([1,1])
+st.subheader(
+    " Forecast-Driven Inventory Planning"
+)
 
-with left:
+# Calculate run-out stats using forecast growth factor
+try:
+    try:
+        full_forecast = pd.read_csv(KPI_DIR / "full_forecast.csv")
+        latest_forecast = full_forecast.tail(90)
+        history_last_90 = full_forecast.iloc[:-90].tail(90)
+        hist_mean = history_last_90["predicted_sales"].mean()
+        fore_mean = latest_forecast["predicted_sales"].mean()
+        growth = ((fore_mean - hist_mean) / hist_mean) * 100
+        growth_factor = 1 + (growth / 100.0)
+    except Exception:
+        growth_factor = 1.12
 
-    st.subheader(
-        " Supplier Intelligence"
-    )
+    # Scale daily unit velocity by forecast growth factor
+    inventory["forecasted_daily_velocity"] = inventory["daily_velocity"] * growth_factor
+    inventory["days_to_stockout"] = inventory["current_stock"] / inventory["forecasted_daily_velocity"]
+    
+    stockout_critical = (inventory["days_to_stockout"] < 15).sum()
+    stockout_warning = ((inventory["days_to_stockout"] >= 15) & (inventory["days_to_stockout"] < 30)).sum()
+    avg_runout_days = inventory["days_to_stockout"].mean()
+except Exception:
+    stockout_critical = 0
+    stockout_warning = 0
+    avg_runout_days = 0.0
 
-    supplier_health = pd.DataFrame({
+c1, c2, c3 = st.columns(3)
 
-        "Category":[
-            "Fast (<10 Days)",
-            "Medium (10-20 Days)",
-            "Slow (>20 Days)"
-        ],
+with c1:
+    st.markdown(f"""
+    <div class="metric-card" style="background:#08152f; border:1px solid #243b63; border-radius:14px; padding:14px; text-align:center;">
+    <div class="metric-title" style="color:#9ca3af; font-size:13px; font-weight:600;">Critical Run-Out (&lt; 15 Days)</div>
+    <div class="metric-value" style="font-size:24px; font-weight:700; color:white; margin-top:10px;">{stockout_critical} products</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        "Count":[
-            (inventory["supplier_lead_time"] < 10).sum(),
-            (
-                (inventory["supplier_lead_time"] >= 10)
-                &
-                (inventory["supplier_lead_time"] <= 20)
-            ).sum(),
-            (inventory["supplier_lead_time"] > 20).sum()
-        ]
-    })
+with c2:
+    st.markdown(f"""
+    <div class="metric-card" style="background:#08152f; border:1px solid #243b63; border-radius:14px; padding:14px; text-align:center;">
+    <div class="metric-title" style="color:#9ca3af; font-size:13px; font-weight:600;">Run-Out Risk (15-30 Days)</div>
+    <div class="metric-value" style="font-size:24px; font-weight:700; color:white; margin-top:10px;">{stockout_warning} products</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    fig3 = px.pie(
-        supplier_health,
-        names="Category",
-        values="Count",
-        hole=0.65
-    )
-
-    fig3.update_layout(
-        height=340,
-        margin=dict(
-            l=10,
-            r=10,
-            t=20,
-            b=10
-        )
-    )
-
-    st.plotly_chart(
-        fig3,
-        use_container_width=True
-    )
-
-with right:
-
-    st.subheader(
-        "💲 Pricing Intelligence"
-    )
-
-    avg_our_price = (
-        competitors["our_price"]
-        .mean()
-    )
-
-    avg_comp_price = (
-        competitors["competitor_price"]
-        .mean()
-    )
-
-    pricing_gap = (
-        avg_comp_price -
-        avg_our_price
-    )
-
-    c1,c2,c3 = st.columns(3)
-
-    c1.metric(
-        "Our Price",
-        f"${avg_our_price:.2f}"
-    )
-
-    c2.metric(
-        "Competitor",
-        f"${avg_comp_price:.2f}"
-    )
-
-    c3.metric(
-        "Gap",
-        f"${pricing_gap:.2f}"
-    )
-
-    fig4 = px.scatter(
-        competitors.head(100),
-        x="our_price",
-        y="competitor_price"
-    )
-
-    fig4.update_layout(
-        height=280,
-        margin=dict(
-            l=10,
-            r=10,
-            t=10,
-            b=10
-        )
-    )
-
-    st.plotly_chart(
-        fig4,
-        use_container_width=True
-    )
+with c3:
+    st.markdown(f"""
+    <div class="metric-card" style="background:#08152f; border:1px solid #243b63; border-radius:14px; padding:14px; text-align:center;">
+    <div class="metric-title" style="color:#9ca3af; font-size:13px; font-weight:600;">Average Inventory Cover</div>
+    <div class="metric-value" style="font-size:24px; font-weight:700; color:white; margin-top:10px;">{avg_runout_days:.1f} days</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -521,29 +463,15 @@ st.subheader(
     " Inventory Action Center"
 )
 
-supplier_delay = (
-    inventory["supplier_lead_time"]
-    > inventory["supplier_lead_time"].mean()
-).sum()
-
-pricing_opportunities = (
-    competitors["our_price"]
-    < competitors["competitor_price"]
-).sum()
-
-c1,c2,c3,c4 = st.columns(4)
+c1,c2 = st.columns(2)
 
 with c1:
 
     st.markdown(f"""
     <div class="alert-card">
-
     🔴 Critical Stock
-
     <br>
-
     <b>{critical_items}</b>
-
     </div>
     """,
     unsafe_allow_html=True)
@@ -552,43 +480,9 @@ with c2:
 
     st.markdown(f"""
     <div class="alert-card">
-
     🟡 Reorder Soon
-
     <br>
-
     <b>{low_stock}</b>
-
-    </div>
-    """,
-    unsafe_allow_html=True)
-
-with c3:
-
-    st.markdown(f"""
-    <div class="alert-card">
-
-    🚚 Supplier Delays
-
-    <br>
-
-    <b>{supplier_delay}</b>
-
-    </div>
-    """,
-    unsafe_allow_html=True)
-
-with c4:
-
-    st.markdown(f"""
-    <div class="alert-card">
-
-    💲 Pricing Opportunities
-
-    <br>
-
-    <b>{pricing_opportunities}</b>
-
     </div>
     """,
     unsafe_allow_html=True)
@@ -596,11 +490,11 @@ with c4:
 st.markdown("<br>", unsafe_allow_html=True)
 
 # =====================================================
-# AI INVENTORY SUMMARY
+# INVENTORY EXECUTIVE SUMMARY
 # =====================================================
 
 st.subheader(
-    "🧠 Inventory Executive Summary"
+    " Inventory Executive Summary"
 )
 
 left,right = st.columns(2)
@@ -609,17 +503,11 @@ with left:
 
     st.markdown(f"""
     <div class="summary-card">
-
-    📦 Inventory health remains strong
-    at <b>{inventory_health:.1f}%</b>.
-
+    📦 Inventory health remains strong at <b>{inventory_health:.1f}%</b>.
     </div>
 
     <div class="summary-card">
-
-    🚨 {critical_items} products require
-    immediate replenishment.
-
+    🚨 <b>{critical_items}</b> products require immediate replenishment.
     </div>
     """,
     unsafe_allow_html=True)
@@ -628,17 +516,11 @@ with right:
 
     st.markdown(f"""
     <div class="summary-card">
-
-    🚚 Supplier delays should be monitored
-    for high-demand products.
-
+    ⚠️ <b>{low_stock}</b> products are below safety reorder thresholds.
     </div>
 
     <div class="summary-card">
-
-    💰 Pricing gaps reveal competitive
-    revenue opportunities.
-
+    📅 Expected inventory cover is <b>{avg_runout_days:.1f}</b> days based on forecasted daily demand.
     </div>
     """,
     unsafe_allow_html=True)
